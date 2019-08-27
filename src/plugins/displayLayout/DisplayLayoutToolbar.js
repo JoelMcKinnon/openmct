@@ -661,6 +661,7 @@ define([], function () {
                 });
 
                 let toolbarArray = Object.values(toolbar);
+                // eslint-disable-next-line no-undef
                 return _.flatten(toolbarArray.reduce((accumulator, group, index) => {
                     group = group.filter(control => control !== undefined);
 
