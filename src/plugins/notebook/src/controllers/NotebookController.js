@@ -21,17 +21,16 @@
  *****************************************************************************/
 
 define([
-    'vue',
-    './EntryController',
-    './EmbedController',
-    '../../res/templates/notebook.html',
-    '../../res/templates/entry.html',
-    '../../res/templates/embed.html',
-    '../../../../ui/components/search.vue',
-    '../../../../ui/preview/PreviewAction',
-    '../../../../ui/mixins/object-link'
-],
-function (
+    "vue",
+    "./EntryController",
+    "./EmbedController",
+    "../../res/templates/notebook.html",
+    "../../res/templates/entry.html",
+    "../../res/templates/embed.html",
+    "../../../../ui/components/search.vue",
+    "../../../../ui/preview/PreviewAction",
+    "../../../../ui/mixins/object-link"
+], function (
     Vue,
     EntryController,
     EmbedController,
@@ -42,11 +41,10 @@ function (
     PreviewAction,
     objectLinkMixin
 ) {
-
     function NotebookController(openmct, domainObject) {
         this.openmct = openmct;
         this.domainObject = domainObject;
-        this.entrySearch = '';
+        this.entrySearch = "";
         this.previewAction = new PreviewAction.default(openmct);
 
         this.show = this.show.bind(this);
@@ -57,51 +55,62 @@ function (
 
     NotebookController.prototype.initializeVue = function (container) {
         var self = this,
-            entryController = new EntryController(this.openmct, this.domainObject),
-            embedController = new EmbedController(this.openmct, this.domainObject);
+            entryController = new EntryController(
+                this.openmct,
+                this.domainObject
+            ),
+            embedController = new EmbedController(
+                this.openmct,
+                this.domainObject
+            );
 
         this.container = container;
 
         var notebookEmbed = {
-            inject:['openmct', 'domainObject'],
-            mixins:[objectLinkMixin.default],
-            props:['embed', 'entry'],
+            inject: ["openmct", "domainObject"],
+            mixins: [objectLinkMixin.default],
+            props: ["embed", "entry"],
             template: EmbedTemplate,
             data: embedController.exposedData,
             methods: embedController.exposedMethods(),
-            beforeMount: embedController.populateActionMenu(self.openmct, [self.previewAction])
+            beforeMount: embedController.populateActionMenu(self.openmct, [
+                self.previewAction
+            ])
         };
 
         var entryComponent = {
-            props:['entry'],
+            props: ["entry"],
             template: EntryTemplate,
             components: {
-                'notebook-embed': notebookEmbed
+                "notebook-embed": notebookEmbed
             },
             data: entryController.exposedData,
             methods: entryController.exposedMethods(),
             mounted: self.focusOnEntry
         };
 
-        var notebookVue = Vue.extend({
+        var NotebookVue = Vue.extend({
             template: NotebookTemplate,
-            provide: {openmct: self.openmct, domainObject: self.domainObject},
+            provide: { openmct: self.openmct, domainObject: self.domainObject },
             components: {
-                'notebook-entry': entryComponent,
-                'search': search.default
+                "notebook-entry": entryComponent,
+                search: search.default
             },
             data: function () {
                 return {
                     entrySearch: self.entrySearch,
-                    showTime: '0',
+                    showTime: "0",
                     sortEntries: self.domainObject.defaultSort,
                     entries: self.domainObject.entries,
-                    currentEntryValue: ''
+                    currentEntryValue: ""
                 };
             },
             computed: {
                 filteredAndSortedEntries() {
-                    return this.sort(this.filterBySearch(this.entries, this.entrySearch), this.sortEntries);
+                    return this.sort(
+                        this.filterBySearch(this.entries, this.entrySearch),
+                        this.sortEntries
+                    );
                 }
             },
             methods: {
@@ -114,52 +123,74 @@ function (
             }
         });
 
-        this.NotebookVue =  new notebookVue();
+        this.NotebookVue = new NotebookVue();
         container.appendChild(this.NotebookVue.$mount().$el);
     };
 
     NotebookController.prototype.newEntry = function (event) {
-        this.NotebookVue.search('');
+        this.NotebookVue.search("");
 
         var date = Date.now(),
             embed;
 
-        if (event.dataTransfer && event.dataTransfer.getData('openmct/domain-object-path')) {
-            var selectedObject = JSON.parse(event.dataTransfer.getData('openmct/domain-object-path'))[0],
+        if (
+            event.dataTransfer &&
+			event.dataTransfer.getData("openmct/domain-object-path")
+        ) {
+            var selectedObject = JSON.parse(
+                    event.dataTransfer.getData("openmct/domain-object-path")
+                )[0],
                 selectedObjectId = selectedObject.identifier.key,
                 cssClass = this.openmct.types.get(selectedObject.type);
 
             embed = {
                 type: selectedObjectId,
-                id: '' + date,
+                id: "" + date,
                 cssClass: cssClass,
                 name: selectedObject.name,
-                snapshot: ''
+                snapshot: ""
             };
         }
 
         var entries = this.domainObject.entries,
-            lastEntryIndex = this.NotebookVue.sortEntries === 'newest' ? 0 : entries.length - 1,
+            lastEntryIndex =
+				this.NotebookVue.sortEntries === "newest"
+				    ? 0
+				    : entries.length - 1,
             lastEntry = entries[lastEntryIndex];
 
-        if (lastEntry === undefined || lastEntry.text || lastEntry.embeds.length) {
-            var createdEntry = {'id': 'entry-' + date, 'createdOn': date, 'embeds':[]};
+        if (
+            lastEntry === undefined ||
+			lastEntry.text ||
+			lastEntry.embeds.length
+        ) {
+            var createdEntry = {
+                id: "entry-" + date,
+                createdOn: date,
+                embeds: []
+            };
 
             if (embed) {
                 createdEntry.embeds.push(embed);
             }
 
             entries.push(createdEntry);
-            this.openmct.objects.mutate(this.domainObject, 'entries', entries);
+            this.openmct.objects.mutate(this.domainObject, "entries", entries);
         } else {
             lastEntry.createdOn = date;
 
-            if(embed) {
+            if (embed) {
                 lastEntry.embeds.push(embed);
             }
 
-            this.openmct.objects.mutate(this.domainObject, 'entries[entries.length-1]', lastEntry);
-            this.focusOnEntry.bind(this.NotebookVue.$children[lastEntryIndex+1])();
+            this.openmct.objects.mutate(
+                this.domainObject,
+                "entries[entries.length-1]",
+                lastEntry
+            );
+            this.focusOnEntry.bind(
+                this.NotebookVue.$children[lastEntryIndex + 1]
+            )();
         }
     };
 
@@ -182,13 +213,18 @@ function (
         }
     };
 
-    NotebookController.prototype.filterBySearch = function (entryArray, filterString) {
+    NotebookController.prototype.filterBySearch = function (
+        entryArray,
+        filterString
+    ) {
         if (filterString) {
             var lowerCaseFilterString = filterString.toLowerCase();
 
             return entryArray.filter(function (entry) {
                 if (entry.text) {
-                    return entry.text.toLowerCase().includes(lowerCaseFilterString);
+                    return entry.text
+                        .toLowerCase()
+                        .includes(lowerCaseFilterString);
                 } else {
                     return false;
                 }
@@ -199,7 +235,7 @@ function (
     };
 
     NotebookController.prototype.sort = function (array, sortDirection) {
-        let oldest = (a,b) => {
+        let oldest = (a, b) => {
                 if (a.createdOn < b.createdOn) {
                     return -1;
                 } else if (a.createdOn > b.createdOn) {
@@ -208,7 +244,7 @@ function (
                     return 0;
                 }
             },
-            newest = (a,b) => {
+            newest = (a, b) => {
                 if (a.createdOn < b.createdOn) {
                     return 1;
                 } else if (a.createdOn > b.createdOn) {
@@ -218,7 +254,7 @@ function (
                 }
             };
 
-        if (sortDirection === 'newest') {
+        if (sortDirection === "newest") {
             return array.sort(newest);
         } else {
             return array.sort(oldest);
