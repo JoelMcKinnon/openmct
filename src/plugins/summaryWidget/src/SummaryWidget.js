@@ -1,13 +1,13 @@
 define([
-    '../res/widgetTemplate.html',
-    './Rule',
-    './ConditionManager',
-    './TestDataManager',
-    './WidgetDnD',
-    './eventHelpers',
-    '../../../api/objects/object-utils',
-    'lodash',
-    'zepto'
+    "../res/widgetTemplate.html",
+    "./Rule",
+    "./ConditionManager",
+    "./TestDataManager",
+    "./WidgetDnD",
+    "./eventHelpers",
+    "../../../api/objects/object-utils",
+    "lodash",
+    "zepto"
 ], function (
     widgetTemplate,
     Rule,
@@ -19,22 +19,21 @@ define([
     _,
     $
 ) {
-
     //default css configuration for new rules
     var DEFAULT_PROPS = {
-        'color': '#cccccc',
-        'background-color': '#666666',
-        'border-color': 'rgba(0,0,0,0)'
+        color: "#cccccc",
+        "background-color": "#666666",
+        "border-color": "rgba(0,0,0,0)"
     };
 
     /**
-     * A Summary Widget object, which allows a user to configure rules based
-     * on telemetry producing domain objects, and update a compact display
-     * accordingly.
-     * @constructor
-     * @param {Object} domainObject The domain Object represented by this Widget
-     * @param {MCT} openmct An MCT instance
-     */
+	 * A Summary Widget object, which allows a user to configure rules based
+	 * on telemetry producing domain objects, and update a compact display
+	 * accordingly.
+	 * @constructor
+	 * @param {Object} domainObject The domain Object represented by this Widget
+	 * @param {MCT} openmct An MCT instance
+	 */
     function SummaryWidget(domainObject, openmct) {
         eventHelpers.extend(this);
 
@@ -42,33 +41,48 @@ define([
         this.openmct = openmct;
 
         this.domainObject.configuration = this.domainObject.configuration || {};
-        this.domainObject.configuration.ruleConfigById = this.domainObject.configuration.ruleConfigById || {};
-        this.domainObject.configuration.ruleOrder = this.domainObject.configuration.ruleOrder || ['default'];
-        this.domainObject.configuration.testDataConfig = this.domainObject.configuration.testDataConfig || [{
-            object: '',
-            key: '',
-            value: ''
-        }];
+        this.domainObject.configuration.ruleConfigById =
+			this.domainObject.configuration.ruleConfigById || {};
+        this.domainObject.configuration.ruleOrder = this.domainObject
+            .configuration.ruleOrder || ["default"];
+        this.domainObject.configuration.testDataConfig = this.domainObject
+            .configuration.testDataConfig || [
+            {
+                object: "",
+                key: "",
+                value: ""
+            }
+        ];
 
-        this.activeId = 'default';
+        this.activeId = "default";
         this.rulesById = {};
         this.domElement = $(widgetTemplate);
-        this.toggleRulesControl = $('.t-view-control-rules', this.domElement);
-        this.toggleTestDataControl = $('.t-view-control-test-data', this.domElement);
-        this.widgetButton = this.domElement.children('#widget');
+        this.toggleRulesControl = $(".t-view-control-rules", this.domElement);
+        this.toggleTestDataControl = $(
+            ".t-view-control-test-data",
+            this.domElement
+        );
+        this.widgetButton = this.domElement.children("#widget");
         this.editing = false;
-        this.container = '';
+        this.container = "";
         this.editListenerUnsubscribe = $.noop;
 
-        this.outerWrapper = $('.widget-edit-holder', this.domElement);
-        this.ruleArea = $('#ruleArea', this.domElement);
-        this.configAreaRules = $('.widget-rules-wrapper', this.domElement);
+        this.outerWrapper = $(".widget-edit-holder", this.domElement);
+        this.ruleArea = $("#ruleArea", this.domElement);
+        this.configAreaRules = $(".widget-rules-wrapper", this.domElement);
 
-        this.testDataArea = $('.widget-test-data', this.domElement);
-        this.addRuleButton = $('#addRule', this.domElement);
+        this.testDataArea = $(".widget-test-data", this.domElement);
+        this.addRuleButton = $("#addRule", this.domElement);
 
-        this.conditionManager = new ConditionManager(this.domainObject, this.openmct);
-        this.testDataManager = new TestDataManager(this.domainObject, this.conditionManager, this.openmct);
+        this.conditionManager = new ConditionManager(
+            this.domainObject,
+            this.openmct
+        );
+        this.testDataManager = new TestDataManager(
+            this.domainObject,
+            this.conditionManager,
+            this.openmct
+        );
 
         this.watchForChanges = this.watchForChanges.bind(this);
         this.show = this.show.bind(this);
@@ -82,93 +96,111 @@ define([
             self = this;
 
         /**
-         * Toggles the configuration area for test data in the view
-         * @private
-         */
+		 * Toggles the configuration area for test data in the view
+		 * @private
+		 */
         function toggleTestData() {
-            self.outerWrapper.toggleClass('expanded-widget-test-data');
-            self.toggleTestDataControl.toggleClass('c-disclosure-triangle--expanded');
+            self.outerWrapper.toggleClass("expanded-widget-test-data");
+            self.toggleTestDataControl.toggleClass(
+                "c-disclosure-triangle--expanded"
+            );
         }
-        this.listenTo(this.toggleTestDataControl, 'click', toggleTestData);
+        this.listenTo(this.toggleTestDataControl, "click", toggleTestData);
 
         /**
-         * Toggles the configuration area for rules in the view
-         * @private
-         */
+		 * Toggles the configuration area for rules in the view
+		 * @private
+		 */
         function toggleRules() {
-            self.outerWrapper.toggleClass('expanded-widget-rules');
-            self.toggleRulesControl.toggleClass('c-disclosure-triangle--expanded');
+            self.outerWrapper.toggleClass("expanded-widget-rules");
+            self.toggleRulesControl.toggleClass(
+                "c-disclosure-triangle--expanded"
+            );
         }
-        this.listenTo(this.toggleRulesControl, 'click', toggleRules);
+        this.listenTo(this.toggleRulesControl, "click", toggleRules);
 
-        openmct.$injector.get('objectService')
-            .getObjects([id]);
+        openmct.$injector.get("objectService").getObjects([id]);
     }
 
     /**
-     * adds or removes href to widget button and adds or removes openInNewTab
-     * @param {string} url String that denotes the url to be opened
-     * @param {string} openNewTab String that denotes wether to open link in new tab or not
-     */
+	 * adds or removes href to widget button and adds or removes openInNewTab
+	 * @param {string} url String that denotes the url to be opened
+	 * @param {string} openNewTab String that denotes wether to open link in new tab or not
+	 */
     SummaryWidget.prototype.addHyperlink = function (url, openNewTab) {
         if (url) {
-            this.widgetButton.attr('href', url);
+            this.widgetButton.attr("href", url);
         } else {
-            this.widgetButton.removeAttr('href');
+            this.widgetButton.removeAttr("href");
         }
 
-        if (openNewTab === 'newTab') {
-            this.widgetButton.attr('target', '_blank');
+        if (openNewTab === "newTab") {
+            this.widgetButton.attr("target", "_blank");
         } else {
-            this.widgetButton.removeAttr('target');
+            this.widgetButton.removeAttr("target");
         }
     };
 
     /**
-     * adds a listener to the object to watch for any changes made by user
-     * only executes if changes are observed
-     * @param {openmct} Object Instance of OpenMCT
-     * @param {domainObject} Object instance of this object
-     */
+	 * adds a listener to the object to watch for any changes made by user
+	 * only executes if changes are observed
+	 * @param {openmct} Object Instance of OpenMCT
+	 * @param {domainObject} Object instance of this object
+	 */
     SummaryWidget.prototype.watchForChanges = function (openmct, domainObject) {
-        this.watchForChangesUnsubscribe = openmct.objects.observe(domainObject, '*', function (newDomainObject) {
-            if (newDomainObject.url !== this.domainObject.url ||
-                    newDomainObject.openNewTab !== this.domainObject.openNewTab) {
-                this.addHyperlink(newDomainObject.url, newDomainObject.openNewTab);
-            }
-        }.bind(this));
+        this.watchForChangesUnsubscribe = openmct.objects.observe(
+            domainObject,
+            "*",
+            function (newDomainObject) {
+                if (
+                    newDomainObject.url !== this.domainObject.url ||
+					newDomainObject.openNewTab !== this.domainObject.openNewTab
+                ) {
+                    this.addHyperlink(
+                        newDomainObject.url,
+                        newDomainObject.openNewTab
+                    );
+                }
+            }.bind(this)
+        );
     };
 
     /**
-     * Builds the Summary Widget's DOM, performs other necessary setup, and attaches
-     * this Summary Widget's view to the supplied container.
-     * @param {element} container The DOM element that will contain this Summary
-     *                            Widget's view.
-     */
+	 * Builds the Summary Widget's DOM, performs other necessary setup, and attaches
+	 * this Summary Widget's view to the supplied container.
+	 * @param {element} container The DOM element that will contain this Summary
+	 *                            Widget's view.
+	 */
     SummaryWidget.prototype.show = function (container) {
         var self = this;
         this.container = container;
         $(container).append(this.domElement);
-        $('.widget-test-data', this.domElement).append(this.testDataManager.getDOM());
-        this.widgetDnD = new WidgetDnD(this.domElement, this.domainObject.configuration.ruleOrder, this.rulesById);
-        this.initRule('default', 'Default');
+        $(".widget-test-data", this.domElement).append(
+            this.testDataManager.getDOM()
+        );
+        this.widgetDnD = new WidgetDnD(
+            this.domElement,
+            this.domainObject.configuration.ruleOrder,
+            this.rulesById
+        );
+        this.initRule("default", "Default");
         this.domainObject.configuration.ruleOrder.forEach(function (ruleId) {
-            if (ruleId !== 'default') {
+            if (ruleId !== "default") {
                 self.initRule(ruleId);
             }
         });
         this.refreshRules();
         this.updateWidget();
 
-        this.listenTo(this.addRuleButton, 'click', this.addRule);
-        this.conditionManager.on('receiveTelemetry', this.executeRules, this);
-        this.widgetDnD.on('drop', this.reorder, this);
+        this.listenTo(this.addRuleButton, "click", this.addRule);
+        this.conditionManager.on("receiveTelemetry", this.executeRules, this);
+        this.widgetDnD.on("drop", this.reorder, this);
     };
 
     /**
-     * Unregister event listeners with the Open MCT APIs, unsubscribe from telemetry,
-     * and clean up event handlers
-     */
+	 * Unregister event listeners with the Open MCT APIs, unsubscribe from telemetry,
+	 * and clean up event handlers
+	 */
     SummaryWidget.prototype.destroy = function (container) {
         this.editListenerUnsubscribe();
         this.conditionManager.destroy();
@@ -183,13 +215,13 @@ define([
     };
 
     /**
-     * Update the view from the current rule configuration and order
-     */
+	 * Update the view from the current rule configuration and order
+	 */
     SummaryWidget.prototype.refreshRules = function () {
         var self = this,
             ruleOrder = self.domainObject.configuration.ruleOrder,
             rules = self.rulesById;
-        self.ruleArea.html('');
+        self.ruleArea.html("");
         Object.values(ruleOrder).forEach(function (ruleId) {
             self.ruleArea.append(rules[ruleId].getDOM());
         });
@@ -204,30 +236,38 @@ define([
 
         rules.forEach(function (ruleKey, index, array) {
             if (array.length > 2 && index > 0) {
-                $('.t-grippy', rulesById[ruleKey].domElement).show();
+                $(".t-grippy", rulesById[ruleKey].domElement).show();
             } else {
-                $('.t-grippy', rulesById[ruleKey].domElement).hide();
+                $(".t-grippy", rulesById[ruleKey].domElement).hide();
             }
         });
     };
 
     /**
-     * Update the widget's appearance from the configuration of the active rule
-     */
+	 * Update the widget's appearance from the configuration of the active rule
+	 */
     SummaryWidget.prototype.updateWidget = function () {
-        const WIDGET_CLASS = 'c-sw js-sw',
-            WIDGET_LABEL_CLASS = 'c-sw__label js-sw__label',
-            WIDGET_ICON_CLASS = 'c-sw__icon js-sw__icon';
+        const WIDGET_ICON_CLASS = "c-sw__icon js-sw__icon";
         var activeRule = this.rulesById[this.activeId];
-        this.applyStyle($('#widget', this.domElement), activeRule.getProperty('style'));
-        $('#widget', this.domElement).prop('title', activeRule.getProperty('message'));
-        $('#widgetLabel', this.domElement).html(activeRule.getProperty('label'));
-        $('#widgetIcon', this.domElement).removeClass().addClass(WIDGET_ICON_CLASS + ' ' + activeRule.getProperty('icon'));
+        this.applyStyle(
+            $("#widget", this.domElement),
+            activeRule.getProperty("style")
+        );
+        $("#widget", this.domElement).prop(
+            "title",
+            activeRule.getProperty("message")
+        );
+        $("#widgetLabel", this.domElement).html(
+            activeRule.getProperty("label")
+        );
+        $("#widgetIcon", this.domElement)
+            .removeClass()
+            .addClass(WIDGET_ICON_CLASS + " " + activeRule.getProperty("icon"));
     };
 
     /**
-     * Get the active rule and update the Widget's appearance.
-     */
+	 * Get the active rule and update the Widget's appearance.
+	 */
     SummaryWidget.prototype.executeRules = function () {
         this.activeId = this.conditionManager.executeRules(
             this.domainObject.configuration.ruleOrder,
@@ -237,33 +277,32 @@ define([
     };
 
     /**
-     * Add a new rule to this widget
-     */
+	 * Add a new rule to this widget
+	 */
     SummaryWidget.prototype.addRule = function () {
         var ruleCount = 0,
             ruleId,
             ruleOrder = this.domainObject.configuration.ruleOrder;
 
-        while (Object.keys(this.rulesById).includes('rule' + ruleCount)) {
+        while (Object.keys(this.rulesById).includes("rule" + ruleCount)) {
             ruleCount++;
         }
 
-        ruleId = 'rule' + ruleCount;
+        ruleId = "rule" + ruleCount;
         ruleOrder.push(ruleId);
         this.domainObject.configuration.ruleOrder = ruleOrder;
 
         this.updateDomainObject();
-        this.initRule(ruleId, 'Rule');
+        this.initRule(ruleId, "Rule");
         this.refreshRules();
     };
 
-
     /**
-     * Duplicate an existing widget rule from its configuration and splice it in
-     * after the rule it duplicates
-     * @param {Object} sourceConfig The configuration properties of the rule to be
-     *                              instantiated
-     */
+	 * Duplicate an existing widget rule from its configuration and splice it in
+	 * after the rule it duplicates
+	 * @param {Object} sourceConfig The configuration properties of the rule to be
+	 *                              instantiated
+	 */
     SummaryWidget.prototype.duplicateRule = function (sourceConfig) {
         var ruleCount = 0,
             ruleId,
@@ -271,13 +310,13 @@ define([
             ruleOrder = this.domainObject.configuration.ruleOrder,
             ruleIds = Object.keys(this.rulesById);
 
-        while (ruleIds.includes('rule' + ruleCount)) {
+        while (ruleIds.includes("rule" + ruleCount)) {
             ruleCount = ++ruleCount;
         }
 
-        ruleId = 'rule' + ruleCount;
+        ruleId = "rule" + ruleCount;
         sourceConfig.id = ruleId;
-        sourceConfig.name += ' Copy';
+        sourceConfig.name += " Copy";
         ruleOrder.splice(ruleOrder.indexOf(sourceRuleId) + 1, 0, ruleId);
         this.domainObject.configuration.ruleOrder = ruleOrder;
         this.domainObject.configuration.ruleConfigById[ruleId] = sourceConfig;
@@ -300,40 +339,50 @@ define([
         Object.assign(styleObj, DEFAULT_PROPS);
         if (!this.domainObject.configuration.ruleConfigById[ruleId]) {
             this.domainObject.configuration.ruleConfigById[ruleId] = {
-                name: ruleName || 'Rule',
-                label: 'Unnamed Rule',
-                message: '',
+                name: ruleName || "Rule",
+                label: "Unnamed Rule",
+                message: "",
                 id: ruleId,
-                icon: ' ',
+                icon: " ",
                 style: styleObj,
-                description: ruleId === 'default' ? 'Default appearance for the widget' : 'A new rule',
-                conditions: [{
-                    object: '',
-                    key: '',
-                    operation: '',
-                    values: []
-                }],
-                jsCondition: '',
-                trigger: 'any',
-                expanded: 'true'
+                description:
+					ruleId === "default"
+					    ? "Default appearance for the widget"
+					    : "A new rule",
+                conditions: [
+                    {
+                        object: "",
+                        key: "",
+                        operation: "",
+                        values: []
+                    }
+                ],
+                jsCondition: "",
+                trigger: "any",
+                expanded: "true"
             };
-
         }
         ruleConfig = this.domainObject.configuration.ruleConfigById[ruleId];
-        this.rulesById[ruleId] = new Rule(ruleConfig, this.domainObject, this.openmct,
-            this.conditionManager, this.widgetDnD, this.container);
-        this.rulesById[ruleId].on('remove', this.refreshRules, this);
-        this.rulesById[ruleId].on('duplicate', this.duplicateRule, this);
-        this.rulesById[ruleId].on('change', this.updateWidget, this);
-        this.rulesById[ruleId].on('conditionChange', this.executeRules, this);
+        this.rulesById[ruleId] = new Rule(
+            ruleConfig,
+            this.domainObject,
+            this.openmct,
+            this.conditionManager,
+            this.widgetDnD,
+            this.container
+        );
+        this.rulesById[ruleId].on("remove", this.refreshRules, this);
+        this.rulesById[ruleId].on("duplicate", this.duplicateRule, this);
+        this.rulesById[ruleId].on("change", this.updateWidget, this);
+        this.rulesById[ruleId].on("conditionChange", this.executeRules, this);
     };
 
     /**
-     * Given two ruleIds, move the source rule after the target rule and update
-     * the view.
-     * @param {Object} event An event object representing this drop with draggingId
-     *                       and dropTarget fields
-     */
+	 * Given two ruleIds, move the source rule after the target rule and update
+	 * the view.
+	 * @param {Object} event An event object representing this drop with draggingId
+	 *                       and dropTarget fields
+	 */
     SummaryWidget.prototype.reorder = function (event) {
         var ruleOrder = this.domainObject.configuration.ruleOrder,
             sourceIndex = ruleOrder.indexOf(event.draggingId),
@@ -350,10 +399,10 @@ define([
     };
 
     /**
-     * Apply a list of css properties to an element
-     * @param {element} elem The DOM element to which the rules will be applied
-     * @param {object} style an object representing the style
-     */
+	 * Apply a list of css properties to an element
+	 * @param {element} elem The DOM element to which the rules will be applied
+	 * @param {object} style an object representing the style
+	 */
     SummaryWidget.prototype.applyStyle = function (elem, style) {
         Object.keys(style).forEach(function (propId) {
             elem.css(propId, style[propId]);
@@ -361,10 +410,14 @@ define([
     };
 
     /**
-     * Mutate this domain object's configuration with the current local configuration
-     */
+	 * Mutate this domain object's configuration with the current local configuration
+	 */
     SummaryWidget.prototype.updateDomainObject = function () {
-        this.openmct.objects.mutate(this.domainObject, 'configuration', this.domainObject.configuration);
+        this.openmct.objects.mutate(
+            this.domainObject,
+            "configuration",
+            this.domainObject.configuration
+        );
     };
 
     return SummaryWidget;

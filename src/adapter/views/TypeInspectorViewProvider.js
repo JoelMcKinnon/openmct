@@ -1,23 +1,17 @@
-define([
-
-], function (
-
-) {
-    const DEFAULT_VIEW_PRIORITY = 100;
-
-    const PRIORITY_LEVELS = {
-        "fallback": Number.NEGATIVE_INFINITY,
-        "default": -100,
-        "none": 0,
-        "optional": DEFAULT_VIEW_PRIORITY,
-        "preferred": 1000,
-        "mandatory": Number.POSITIVE_INFINITY
-    };
-
-    function TypeInspectorViewProvider(typeDefinition, openmct, convertToLegacyObject) {
-        console.warn(`DEPRECATION WARNING: Migrate ${typeDefinition.key} from ${typeDefinition.bundle.path} to use the new Inspector View APIs.  Legacy Inspector view support will be removed soon.`);
-        let representation = openmct.$injector.get('representations[]')
-            .filter((r) => r.key === typeDefinition.inspector)[0];
+define([], function () {
+    function TypeInspectorViewProvider(
+        typeDefinition,
+        openmct,
+        convertToLegacyObject
+    ) {
+        console.warn(
+            `DEPRECATION WARNING: Migrate ${typeDefinition.key} from ${
+                typeDefinition.bundle.path
+            } to use the new Inspector View APIs.  Legacy Inspector view support will be removed soon.`
+        );
+        let representation = openmct.$injector
+            .get("representations[]")
+            .filter(r => r.key === typeDefinition.inspector)[0];
 
         return {
             key: representation.key,
@@ -39,8 +33,8 @@ define([
             },
             view: function (selection) {
                 let domainObject = selection[0][0].context.item;
-                let $rootScope = openmct.$injector.get('$rootScope');
-                let templateLinker = openmct.$injector.get('templateLinker');
+                let $rootScope = openmct.$injector.get("$rootScope");
+                let templateLinker = openmct.$injector.get("templateLinker");
                 let scope = $rootScope.$new(true);
                 let legacyObject = convertToLegacyObject(domainObject);
                 let isDestroyed = false;
@@ -48,20 +42,23 @@ define([
                 scope.domainObject = legacyObject;
                 scope.model = legacyObject.getModel();
 
-
                 return {
                     show: function (container) {
-                        let child = document.createElement('div');
+                        let child = document.createElement("div");
                         container.appendChild(child);
                         // TODO: implement "gestures" support ?
                         let uses = representation.uses || [];
                         let promises = [];
                         let results = uses.map(function (capabilityKey, i) {
-                            let result = legacyObject.useCapability(capabilityKey);
+                            let result = legacyObject.useCapability(
+                                capabilityKey
+                            );
                             if (result.then) {
-                                promises.push(result.then(function (r) {
-                                    results[i] = r;
-                                }));
+                                promises.push(
+                                    result.then(function (r) {
+                                        results[i] = r;
+                                    })
+                                );
                             }
                             return result;
                         });
@@ -73,21 +70,16 @@ define([
                             uses.forEach(function (key, i) {
                                 scope[key] = results[i];
                             });
-                            element = openmct.$angular.element(child)
-                            templateLinker.link(
-                                scope,
-                                element,
-                                representation
-                            );
-                            container.style.height = '100%';
+                            element = openmct.$angular.element(child);
+                            templateLinker.link(scope, element, representation);
+                            container.style.height = "100%";
                         }
 
                         if (promises.length) {
-                            Promise.all(promises)
-                                .then(function () {
-                                    link();
-                                    scope.$digest();
-                                });
+                            Promise.all(promises).then(function () {
+                                link();
+                                scope.$digest();
+                            });
                         } else {
                             link();
                         }
@@ -99,11 +91,10 @@ define([
                         element = null;
                         scope = null;
                     }
-                }
+                };
             }
         };
     }
 
     return TypeInspectorViewProvider;
-
 });

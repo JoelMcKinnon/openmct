@@ -20,68 +20,61 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+define([
+    "../src/PersistenceFailureHandler",
+    "../src/PersistenceFailureConstants"
+], function (PersistenceFailureHandler, Constants) {
+    describe("The persistence failure handler", function () {
+        var mockQ, mockDialogService, mockFailures, mockPromise, handler;
 
-define(
-    ["../src/PersistenceFailureHandler", "../src/PersistenceFailureConstants"],
-    function (PersistenceFailureHandler, Constants) {
-
-        describe("The persistence failure handler", function () {
-            var mockQ,
-                mockDialogService,
-                mockFailures,
-                mockPromise,
-                handler;
-
-            function asPromise(value) {
-                return (value || {}).then ? value : {
-                    then: function (callback) {
-                        return asPromise(callback(value));
-                    }
-                };
-            }
-
-            function makeMockFailure(id, index) {
-                var mockFailure = jasmine.createSpyObj(
-                        'failure-' + id,
-                        ['requeue']
-                    ),
-                    mockPersistence = jasmine.createSpyObj(
-                        'persistence-' + id,
-                        ['refresh', 'persist']
-                    );
-                mockFailure.domainObject = jasmine.createSpyObj(
-                    'domainObject',
-                    ['getCapability', 'useCapability', 'getModel']
-                );
-                mockFailure.domainObject.getCapability.and.callFake(function (c) {
-                    return (c === 'persistence') && mockPersistence;
-                });
-                mockFailure.domainObject.getModel.and.returnValue({ id: id, modified: index });
-                mockFailure.persistence = mockPersistence;
-                mockFailure.id = id;
-                mockFailure.error = { key: Constants.REVISION_ERROR_KEY };
-                return mockFailure;
-            }
-
-            beforeEach(function () {
-                mockQ = jasmine.createSpyObj('$q', ['all', 'when']);
-                mockDialogService = jasmine.createSpyObj('dialogService', ['getUserChoice']);
-                mockFailures = ['a', 'b', 'c'].map(makeMockFailure);
-                mockPromise = jasmine.createSpyObj('promise', ['then']);
-                mockDialogService.getUserChoice.and.returnValue(mockPromise);
-                mockQ.all.and.returnValue(mockPromise);
-                mockPromise.then.and.returnValue(mockPromise);
-                handler = new PersistenceFailureHandler(mockQ, mockDialogService);
+        function makeMockFailure(id, index) {
+            var mockFailure = jasmine.createSpyObj("failure-" + id, [
+                    "requeue"
+                ]),
+                mockPersistence = jasmine.createSpyObj("persistence-" + id, [
+                    "refresh",
+                    "persist"
+                ]);
+            mockFailure.domainObject = jasmine.createSpyObj("domainObject", [
+                "getCapability",
+                "useCapability",
+                "getModel"
+            ]);
+            mockFailure.domainObject.getCapability.and.callFake(function (c) {
+                return c === "persistence" && mockPersistence;
             });
+            mockFailure.domainObject.getModel.and.returnValue({
+                id: id,
+                modified: index
+            });
+            mockFailure.persistence = mockPersistence;
+            mockFailure.id = id;
+            mockFailure.error = { key: Constants.REVISION_ERROR_KEY };
+            return mockFailure;
+        }
 
-            it("discards on handle", function () {
-                handler.handle(mockFailures);
-                mockFailures.forEach(function (mockFailure) {
-                    expect(mockFailure.persistence.refresh).toHaveBeenCalled();
-                    expect(mockFailure.requeue).not.toHaveBeenCalled();
-                    expect(mockFailure.domainObject.useCapability).not.toHaveBeenCalled();
-                });
+        beforeEach(function () {
+            mockQ = jasmine.createSpyObj("$q", ["all", "when"]);
+            mockDialogService = jasmine.createSpyObj("dialogService", [
+                "getUserChoice"
+            ]);
+            mockFailures = ["a", "b", "c"].map(makeMockFailure);
+            mockPromise = jasmine.createSpyObj("promise", ["then"]);
+            mockDialogService.getUserChoice.and.returnValue(mockPromise);
+            mockQ.all.and.returnValue(mockPromise);
+            mockPromise.then.and.returnValue(mockPromise);
+            handler = new PersistenceFailureHandler(mockQ, mockDialogService);
+        });
+
+        it("discards on handle", function () {
+            handler.handle(mockFailures);
+            mockFailures.forEach(function (mockFailure) {
+                expect(mockFailure.persistence.refresh).toHaveBeenCalled();
+                expect(mockFailure.requeue).not.toHaveBeenCalled();
+                expect(
+                    mockFailure.domainObject.useCapability
+                ).not.toHaveBeenCalled();
             });
         });
-    }
-);
+    });
+});

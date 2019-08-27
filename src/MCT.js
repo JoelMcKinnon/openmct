@@ -386,30 +386,6 @@ define([
 		 * @event start
 		 * @memberof module:openmct.MCT~
 		 */
-        var startPromise = new Main().run(this.legacyRegistry).then(
-            function (angular) {
-                this.$angular = angular;
-                // OpenMCT Object provider doesn't operate properly unless
-                // something has depended upon objectService.  Cool, right?
-                this.$injector.get("objectService");
-
-                var appLayout = new Vue({
-                    components: {
-                        Layout: Layout.default
-                    },
-                    provide: {
-                        openmct: this
-                    },
-                    template: '<Layout ref="layout"></Layout>'
-                });
-                domElement.appendChild(appLayout.$mount().$el);
-
-                this.layout = appLayout.$refs.layout;
-                Browse(this);
-                this.router.start();
-                this.emit("start");
-            }.bind(this)
-        );
     };
 
     /**
