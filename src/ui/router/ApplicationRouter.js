@@ -4,8 +4,8 @@ Application router -- must
 
 */
 
-const LocationBar = require('location-bar');
-const EventEmitter = require('EventEmitter');
+const LocationBar = require("location-bar");
+const EventEmitter = require("EventEmitter");
 
 function paramsToObject(searchParams) {
     let params = {};
@@ -39,17 +39,17 @@ class ApplicationRouter extends EventEmitter {
      * start(); Start routing.
      */
     constructor() {
-        super()
+        super();
         this.routes = [];
         this.started = false;
     }
 
     /**
-     * start application routing, should be done after handlers are registered.
-     */
+	 * start application routing, should be done after handlers are registered.
+	 */
     start() {
         if (this.started) {
-            throw new Error('Router already started!');
+            throw new Error("Router already started!");
         }
         this.started = true;
         let locationBar = new LocationBar();
@@ -60,21 +60,21 @@ class ApplicationRouter extends EventEmitter {
     }
 
     handleLocationChange(pathString) {
-        if (pathString[0] !== '/') {
-            pathString = '/' + pathString
+        if (pathString[0] !== "/") {
+            pathString = "/" + pathString;
         }
 
         let url = new URL(
             pathString,
             `${location.protocol}//${location.host}${location.pathname}`
-        )
+        );
 
         let oldLocation = this.currentLocation;
 
         let newLocation = {
             url: url,
             path: url.pathname,
-            queryString: url.search.replace(/^\?/, ''),
+            queryString: url.search.replace(/^\?/, ""),
             params: paramsToObject(url.searchParams)
         };
 
@@ -87,12 +87,9 @@ class ApplicationRouter extends EventEmitter {
         }
 
         if (oldLocation.path !== newLocation.path) {
-            this.doPathChange(
-                newLocation.path,
-                oldLocation.path,
-                this
-            );
+            this.doPathChange(newLocation.path, oldLocation.path, this);
         }
+        // eslint-disable-next-line no-undef
         if (!_.isEqual(oldLocation.params, newLocation.params)) {
             this.doParamsChange(
                 newLocation.params,
@@ -105,9 +102,13 @@ class ApplicationRouter extends EventEmitter {
     doPathChange(newPath, oldPath, newLocation) {
         let route = this.routes.filter(r => r.matcher.test(newPath))[0];
         if (route) {
-            route.callback(newPath, route.matcher.exec(newPath), this.currentLocation.params);
+            route.callback(
+                newPath,
+                route.matcher.exec(newPath),
+                this.currentLocation.params
+            );
         }
-        this.emit('change:path', newPath, oldPath);
+        this.emit("change:path", newPath, oldPath);
     }
 
     doParamsChange(newParams, oldParams, newLocation) {
@@ -122,16 +123,16 @@ class ApplicationRouter extends EventEmitter {
                 changedParams[key] = undefined;
             }
         }
-        this.emit('change:params', newParams, oldParams, changedParams);
+        this.emit("change:params", newParams, oldParams, changedParams);
     }
 
     /**
-     * Update route params.  Takes an object of updates.  New parameters
-     */
+	 * Update route params.  Takes an object of updates.  New parameters
+	 */
     updateParams(updateParams) {
         let searchParams = this.currentLocation.url.searchParams;
         for (let [key, value] of Object.entries(updateParams)) {
-            if (typeof value === 'undefined') {
+            if (typeof value === "undefined") {
                 searchParams.delete(key);
             } else {
                 searchParams.set(key, value);
@@ -147,7 +148,7 @@ class ApplicationRouter extends EventEmitter {
     update(path, params) {
         let searchParams = this.currentLocation.url.searchParams;
         for (let [key, value] of Object.entries(params)) {
-            if (typeof value === 'undefined') {
+            if (typeof value === "undefined") {
                 searchParams.delete(key);
             } else {
                 searchParams.set(key, value);
@@ -169,8 +170,9 @@ class ApplicationRouter extends EventEmitter {
     }
 
     route(matcher, callback) {
-        this.routes.push({matcher, callback});
+        this.routes.push({ matcher, callback });
     }
 }
 
+// eslint-disable-next-line no-undef
 module.exports = ApplicationRouter;
